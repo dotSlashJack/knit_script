@@ -14,5 +14,5 @@ assert p == "dog", f"p after with-1: {p}";
 with p as "bird", Racking as 2:{
 	assert p == "bird", f"p in with-2: {p}";
 }
-assert Racking == 0.0, f"Expected racking of 0.0 but got {Racking}";
+assert Rack == 0.0, f"Expected racking of 0.0 but got {Racking}";
 assert p == "dog", p;

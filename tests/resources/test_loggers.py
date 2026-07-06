@@ -45,7 +45,7 @@ def get_test_info_logger(name: str = "Test KnitScript Log", to_file: bool = Fals
     Returns:
         Knit_Script_Logger: Knit_Script_Logger used for a given test case.
     """
-    return Knit_Script_Logger(log_to_console=_log_to_console, log_to_file=to_file, logging_level=KnitScript_Logging_Level.info, log_name=name)
+    return Knit_Script_Logger(log_to_console=False, log_to_file=to_file, logging_level=KnitScript_Logging_Level.info, log_name=name)
 
 
 def get_test_warning_logger(name: str = "Test KnitScript Warning Log", to_file: bool = False) -> KnitScript_Warning_Log:
@@ -57,7 +57,7 @@ def get_test_warning_logger(name: str = "Test KnitScript Warning Log", to_file: 
     Returns:
         KnitScript_Warning_Logger: Knit_Script_Warning_Logger used for a given test case.
     """
-    return KnitScript_Warning_Log(log_to_console=_log_to_console, log_to_file=to_file, log_name=name)
+    return KnitScript_Warning_Log(log_to_console=False, log_to_file=to_file, log_name=name)
 
 
 def get_test_error_logger(name: str = "Test KnitScript Error Log", to_file: bool = False) -> KnitScript_Error_Log:
@@ -69,7 +69,7 @@ def get_test_error_logger(name: str = "Test KnitScript Error Log", to_file: bool
     Returns:
         KnitScript_Error_Logger: Logger used for a given test case.
     """
-    return KnitScript_Error_Log(log_to_console=_log_to_console, log_to_file=to_file, log_name=name)
+    return KnitScript_Error_Log(log_to_console=False, log_to_file=to_file, log_name=name)
 
 
 def get_test_debug_logger(name: str = "Test KnitScript Debug Log", to_file: bool = False) -> KnitScript_Debug_Log:
@@ -81,4 +81,4 @@ def get_test_debug_logger(name: str = "Test KnitScript Debug Log", to_file: bool
     Returns:
         KnitScript_Debug_Logger: Logger used for a given test case.
     """
-    return KnitScript_Debug_Log(log_to_console=_log_to_console, log_to_file=to_file, log_name=name)
+    return KnitScript_Debug_Log(log_to_console=False, log_to_file=to_file, log_name=name)

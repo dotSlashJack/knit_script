@@ -10,10 +10,10 @@ from __future__ import annotations
 import parglare
 from parglare.common import Location, position_context
 
-from knit_script.knit_script_exceptions.Knit_Script_Exception import Knit_Script_Exception
+from knit_script.knit_script_errors.Knit_Script_Error import Knit_Script_Error
 
 
-class Parsing_Exception(Knit_Script_Exception):
+class Parsing_Error(Knit_Script_Error):
     """Exception raised when there is an error parsing KnitScript code.
 
     The Parsing_Exception class provides enhanced error reporting for syntax errors in KnitScript source code.

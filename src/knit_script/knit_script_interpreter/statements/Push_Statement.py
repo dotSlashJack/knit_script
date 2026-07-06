@@ -68,12 +68,4 @@ class Push_Statement(Statement):
                     context.gauged_sheet_record.push_layer_forward(needle_pos, dist)
                 else:
                     context.gauged_sheet_record.push_layer_backward(needle_pos, dist)
-        context.knitout.extend(context.gauged_sheet_record.reset_to_sheet(context.sheet.sheet))
-
-    # def __str__(self) -> str:
-    #     """Return string representation of the push statement.
-    #
-    #     Returns:
-    #         str: A string showing the needles and push operation.
-    #     """
-    #     return f"push {self._needles} {self._push_val}"
+        context.execute_and_add_knitout_lines(*context.gauged_sheet_record.reset_to_sheet(context.sheet.sheet))

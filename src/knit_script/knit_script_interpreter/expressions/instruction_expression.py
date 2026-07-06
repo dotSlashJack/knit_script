@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 from knitout_interpreter.knitout_operations.knitout_instruction import Knitout_Instruction_Type
 from parglare.parser import LRStackNode
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 
 from knit_script.knit_script_interpreter.expressions.expressions import Expression
 from knit_script.knit_script_interpreter.knit_script_context import Knit_Script_Context
@@ -42,7 +42,7 @@ class Needle_Instruction_Exp(Expression):
         self._needles: list[Expression] = needles
         self._instruction_type: Expression | Knitout_Instruction_Type = instruction
 
-    def evaluate(self, context: Knit_Script_Context) -> tuple[Knitout_Instruction_Type, list[Needle]]:
+    def evaluate(self, context: Knit_Script_Context) -> tuple[Knitout_Instruction_Type, list[Needle_Specification]]:
         """Evaluate the expression to get the instruction and target needles.
 
         Evaluates the instruction type and needle expressions, validates that the instruction is appropriate for needle operations, and ensures all targets are valid Needle objects.
@@ -63,7 +63,7 @@ class Needle_Instruction_Exp(Expression):
             instruction_type = self._instruction_type.evaluate(context)
             if not isinstance(instruction_type, Knitout_Instruction_Type) or not instruction_type.is_needle_instruction:
                 raise TypeError(f"Expected knit, tuck, miss, split, or drop but got {instruction_type}")
-        needles: list[Needle] = []
+        needles: list[Needle_Specification] = []
         for exp in self._needles:
             value = exp.evaluate(context)
             if isinstance(value, Iterable):
@@ -71,7 +71,7 @@ class Needle_Instruction_Exp(Expression):
             else:
                 needles.append(value)
         for needle in needles:
-            if not isinstance(needle, Needle):
+            if not isinstance(needle, Needle_Specification):
                 raise TypeError(f"Expected List of needles, but got {needle} in {needles}")
 
         return instruction_type, needles

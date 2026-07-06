@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 from knitout_interpreter.knitout_operations.knitout_instruction import Knitout_Instruction_Type
 from parglare.parser import LRStackNode
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 
 from knit_script.knit_script_interpreter.expressions.expressions import Expression
 from knit_script.knit_script_interpreter.knit_script_context import Knit_Script_Context
@@ -61,7 +61,7 @@ class Xfer_Pass_Statement(Statement):
         Raises:
             TypeError: If needle expressions don't evaluate to Needle objects or if the bed expression doesn't evaluate to a Machine_Bed_Position.
         """
-        needles: list[Needle] = []
+        needles: list[Needle_Specification] = []
         for needle in self._needles:
             n = needle.evaluate(context)
             if isinstance(n, Iterable):
@@ -69,7 +69,7 @@ class Xfer_Pass_Statement(Statement):
             else:
                 needles.append(n)
         for n in needles:
-            if not isinstance(n, Needle):
+            if not isinstance(n, Needle_Specification):
                 raise TypeError(f"Expected xfer from needles but got {n}")
 
         target_bed = None

@@ -3,6 +3,7 @@ import cast_ons;
 pattern_width = border + block_width + border;
 with Carrier as white:{
 	cast_ons.alt_tuck_cast_on(pattern_width);
+	releasehook;
 	for _ in range(border):{
 		in reverse direction:{
 			knit Loops;
@@ -24,7 +25,7 @@ for i in range(block_height):{
 			knit block;
 		}
 	}
-	if i > 0:{ releasehook;}
+	releasehook;
 }
 cut black;
 with Carrier as white:{

@@ -16,7 +16,7 @@ class TestCarrier_Expression(TestCase):
                 tuck Front_Needles[10: 20];
             }
             releasehook;
-            assert machine.carrier_system[Carrier].position == 10;
+            assert machine.carrier_system[Carrier][0].slot_number == 10;
             """
         interpret_test_ks(pattern, print_k_lines=False)
 

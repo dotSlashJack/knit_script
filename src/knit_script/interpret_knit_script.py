@@ -3,6 +3,7 @@
 from typing import Any
 
 from knit_graphs.Knit_Graph import Knit_Graph
+from knitout_interpreter.knitout_execution_structures.Knitout_Knitting_Machine import Knitout_Machine_Specification
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
 from knit_script.debugger.knitscript_debugger import Knit_Script_Debugger
@@ -18,6 +19,7 @@ def knit_script_to_knitout(
     warning_logger: KnitScript_Warning_Log | None = None,
     error_logger: KnitScript_Error_Log | None = None,
     debugger: Knit_Script_Debugger | None = None,
+    knitout_machine_spec: Knitout_Machine_Specification | None = None,
     **python_variables: Any,
 ) -> tuple[Knit_Graph, Knitting_Machine]:
     """Convert a knit script pattern into knitout format.
@@ -42,6 +44,7 @@ def knit_script_to_knitout(
         info_logger (Knit_Script_Logger, optional): The logger to attach to this context. Defaults to a standard logger which outputs only to console.
         warning_logger (KnitScript_Warning_Log, optional): The warning logger to attach to this context. Defaults to a standard warning logger which outputs only to console.
         error_logger (KnitScript_Error_Log, optional): The error logger to attach to this context. Defaults to a standard error logger which outputs only to console.
+        knitout_machine_spec (Knitout_Machine_Specification, optional): The specification of the knitting machine to execute on. Defaults to default machine specification.
         **python_variables (Any): Additional keyword arguments that will be loaded into the knit script execution scope as Python variables. These can be referenced within the knit script pattern.
 
     Returns:
@@ -53,7 +56,7 @@ def knit_script_to_knitout(
     Raises:
         FileNotFoundError: If pattern_is_filename is True and the specified pattern file cannot be found.
     """
-    interpreter = Knit_Script_Interpreter(info_logger=info_logger, warning_logger=warning_logger, error_logger=error_logger, debugger=debugger)
+    interpreter = Knit_Script_Interpreter(info_logger=info_logger, warning_logger=warning_logger, error_logger=error_logger, debugger=debugger, knitout_machine_spec=knitout_machine_spec)
     _knitout, knit_graph, machine_state, _return_value = interpreter.write_knitout(pattern, out_file_name, pattern_is_filename, **python_variables)
     return knit_graph, machine_state
 

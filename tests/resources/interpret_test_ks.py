@@ -1,7 +1,9 @@
-from typing import Any
+from typing import Any, Sequence
 
 from knit_graphs.Knit_Graph import Knit_Graph
 from knitout_interpreter.debugger.knitout_debugger import Knitout_Debugger
+from knitout_interpreter.knitout_execution_structures.Knitout_Knitting_Machine import Knitout_Machine_Specification
+from knitout_interpreter.knitout_execution_structures.knitout_program import Knitout_Program
 from knitout_interpreter.knitout_operations.Header_Line import Knitout_Header_Line
 from knitout_interpreter.knitout_operations.Knitout_Line import Knitout_Line
 from knitout_interpreter.run_knitout import run_knitout
@@ -24,8 +26,9 @@ def interpret_test_ks(
     print_k_lines: bool = False,
     execute_knitout: bool = True,
     ko_debugger: Knitout_Debugger | None = None,
+    knitout_machine_spec: Knitout_Machine_Specification | None = None,
     **python_variables: Any,
-) -> tuple[list[Knitout_Line], Knit_Graph, Knitting_Machine]:
+) -> tuple[Knitout_Program | None, Knit_Graph, Knitting_Machine]:
     """
     Process the given knit script pattern and printout the resulting knitout file.
     Args:
@@ -39,10 +42,11 @@ def interpret_test_ks(
         print_k_lines: If True, prints out the resulting knitout for review.
         execute_knitout: If True, executes the resulting knitout and returns the parsed knitout line objects.
         ko_debugger: The optional knitout debugger to attach to the knitout executer process
+        knitout_machine_spec (Knitout_Machine_Specification, optional): The specification of the knitting machine to execute on. Defaults to default machine settings.
         **python_variables [Any]: The keyword variable pairs of python variables to initiate the knitscript interpreter with.
 
     Returns: Tuple:
-        - List of Knitout_Lines that make up the resulting knitout file. This will be empty if the knitout was not executed.
+        - List of Knitout_Lines that make up the resulting knitout file. This will be None if the knitout was not executed.
         - The Knitgraph produced by processing the given knitscript pattern.
         - The Knitting Machine after processing the given knitscript pattern.
 
@@ -54,7 +58,15 @@ def interpret_test_ks(
     if error_logger is None:
         error_logger = get_test_error_logger()
     knit_graph, machine_state = knit_script_to_knitout(
-        ks_pattern, out_file_name, pattern_is_filename=pattern_is_filename, debugger=ks_debugger, info_logger=info_logger, warning_logger=warning_logger, error_logger=error_logger, **python_variables
+        ks_pattern,
+        out_file_name,
+        pattern_is_filename=pattern_is_filename,
+        debugger=ks_debugger,
+        info_logger=info_logger,
+        warning_logger=warning_logger,
+        error_logger=error_logger,
+        knitout_machine_spec=knitout_machine_spec,
+        **python_variables,
     )
     if print_k_lines:
         with open(out_file_name, "r") as f:
@@ -65,7 +77,7 @@ def interpret_test_ks(
         klines, machine_state, knit_graph = run_knitout(out_file_name, debugger=ko_debugger)
         return klines, knit_graph, machine_state
     else:
-        return [], knit_graph, machine_state
+        return None, knit_graph, machine_state
 
 
 def interpret_test_ks_with_return(
@@ -80,7 +92,7 @@ def interpret_test_ks_with_return(
     execute_knitout: bool = True,
     ko_debugger: Knitout_Debugger | None = None,
     **python_variables: Any,
-) -> tuple[list[Knitout_Line], Knit_Graph, Knitting_Machine, Any | None]:
+) -> tuple[Knitout_Program | None, Knit_Graph, Knitting_Machine, Any | None]:
     """
     Process the given knit script pattern and printout the resulting knitout file.
     Args:
@@ -97,7 +109,7 @@ def interpret_test_ks_with_return(
         **python_variables [Any]: The keyword variable pairs of python variables to initiate the knitscript interpreter with.
 
     Returns: Tuple:
-        - List of Knitout_Lines that make up the resulting knitout file. This will be empty if the knitout was not executed.
+        - List of Knitout_Lines that make up the resulting knitout file. This will be None if the knitout was not executed.
         - The Knitgraph produced by processing the given knitscript pattern.
         - The Knitting Machine after processing the given knitscript pattern.
 
@@ -120,10 +132,10 @@ def interpret_test_ks_with_return(
         klines, machine_state, knit_graph = run_knitout(out_file_name, debugger=ko_debugger)
         return klines, knit_graph, machine_state, return_val
     else:
-        return [], knit_graph, machine_state, return_val
+        return None, knit_graph, machine_state, return_val
 
 
-def count_lines(klines: list[Knitout_Line], exclude_types=None, include_types: set[type] | None = None) -> int:
+def count_lines(klines: Sequence[Knitout_Line], exclude_types=None, include_types: set[type] | None = None) -> int:
     """
 
     Args:

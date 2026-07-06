@@ -2,6 +2,8 @@ from unittest import TestCase
 
 from resources.interpret_test_ks import interpret_test_ks
 
+from knit_script.knit_script_interpreter.knitscript_logging.knitscript_logger import Knit_Script_Logger
+
 
 class TestOperator_Expression(TestCase):
     def test_negation(self):
@@ -82,4 +84,27 @@ class TestOperator_Expression(TestCase):
 
     def test_and(self):
         program = r"""assert 1==1 and True;"""
+        interpret_test_ks(program, print_k_lines=False)
+
+    def test_arithmetic(self):
+        program = rf"""
+        print "5 - 1 + 2 = " + str({5 - 1 + 2});
+        assert 5 - 1 + 2 == {5-1+2};
+        print "5 - (1 + 2) = " + str({5 - (1 + 2)});
+        assert 5 - (1 + 2) == {5-(1+2)};
+        print "(5 - 1) + 2 = " + str({(5 - 1) + 2});
+        assert (5 - 1) + 2 == {(5-1)+2};
+        print "5 - 1 + 2 + 1 = " + str({5 - 1 + 2 + 1});
+        assert 5 - 1 + 2 + 1 == {5-1+2+1};
+        print "5 - 1 + (2 + 1) = " + str({5 - 1 + (2 + 1)});
+        assert 5-1 +(2 +1) == {5-1+(2+1)};
+        print "5 - (1 + 2 + 1) == " + str({5 - (1 + 2 + 1)});
+        assert 5-(1 +2 +1) == {5-(1+2+1)};
+        print "5 + (-1 + 2 + 1) == " + str({5 + (-1 + 2 + 1)});
+        assert 5+(-1 +2 +1) == {5+(-1+2+1)};
+        print "(5 - 1) + 2 + 1 = " + str({(5 - 1) + 2 + 1});
+        assert (5-1) +2 +1 == {(5-1)+2+1};
+        print "(5 - 1 + 2) + 1 = " + str({(5 - 1 + 2) + 1});
+        assert( 5-1 +2) +1 == {(5-1+2)+1};
+        """
         interpret_test_ks(program, print_k_lines=False)

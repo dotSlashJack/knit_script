@@ -10,4 +10,4 @@ class TestWith_Statement(TestCase):
         program = load_test_resource("with_tests.ks")
         klines, _, __ = interpret_test_ks(program, pattern_is_filename=True, print_k_lines=False)
         rack_count = count_lines(klines, include_types={Rack_Instruction})
-        assert rack_count == 2, f"Expected 3 racks but got {rack_count}"
+        self.assertEqual(rack_count, 2)

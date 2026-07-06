@@ -8,18 +8,17 @@ The context integrates scope management with machine operations to provide a uni
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
-from knitout_interpreter.knitout_operations.Header_Line import get_machine_header
-from knitout_interpreter.knitout_operations.Knitout_Line import Knitout_Line
-from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.Knitting_Machine_Specification import Knitting_Machine_Specification
+from knitout_interpreter.knitout_execution_structures.knitout_header import Knitting_Machine_Header
+from knitout_interpreter.knitout_execution_structures.Knitout_Knitting_Machine import Knitout_Knitting_Machine, Knitout_Machine_Specification
+from knitout_interpreter.knitout_operations.Knitout_Line import Knitout_Line, Knitout_No_Op
+from knitout_interpreter.knitout_operations.Pause_Instruction import Pause_Instruction
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Sheet_Identifier import Sheet_Identifier
-from virtual_knitting_machine.machine_components.needles.Sheet_Needle import Sheet_Needle, Slider_Sheet_Needle
-from virtual_knitting_machine.machine_components.needles.Slider_Needle import Slider_Needle
-from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier, Yarn_Carrier_Set
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
+from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 
 from knit_script.debugger.debug_protocol import Knit_Script_Debuggable_Protocol, Knit_Script_Debugger_Protocol
 from knit_script.debugger.enter_frame_decorator import enters_new_scope
@@ -55,7 +54,7 @@ class Knit_Script_Context(Knit_Script_Debuggable_Protocol):
     def __init__(
         self,
         parent_scope: Knit_Script_Scope | None = None,
-        machine_specification: Knitting_Machine_Specification | None = None,
+        machine_specification: Knitout_Machine_Specification | None = None,
         ks_file: str | None = None,
         parser: Knit_Script_Parser | None = None,
         knitout_version: int = 2,
@@ -78,8 +77,8 @@ class Knit_Script_Context(Knit_Script_Debuggable_Protocol):
             error_logger (KnitScript_Error_Log, optional): The error logger to attach to this context. Defaults to a standard error logger which outputs only to console.
         """
         if machine_specification is None:
-            machine_specification = Knitting_Machine_Specification()
-        self.machine_state: Knitting_Machine = Knitting_Machine(machine_specification=machine_specification)
+            machine_specification = Knitout_Machine_Specification()
+        self.machine_state: Knitout_Knitting_Machine = Knitout_Knitting_Machine(machine_specification=machine_specification)
         self.ks_file: str | None = ks_file
         if parser is not None:
             self.parser: Knit_Script_Parser = parser
@@ -87,7 +86,9 @@ class Knit_Script_Context(Knit_Script_Debuggable_Protocol):
             self.parser = Knit_Script_Parser()
         self.last_carriage_pass_result: list[Needle] | dict[Needle, Needle | None] = {}
         self._version = knitout_version
-        self.knitout: list[Knitout_Line] = cast(list[Knitout_Line], get_machine_header(self.machine_state, self.version))
+        self._header: Knitting_Machine_Header = Knitting_Machine_Header(self.machine_state, self.version)
+        self.knitout: list[Knitout_Line] = []
+        self.execute_and_add_knitout_lines(*self._header.header_lines)
         self.variable_scope: Knit_Script_Scope = Knit_Script_Scope(self, parent_scope)
         self.debugger: Knit_Script_Debugger_Protocol | None = None
         if debugger is not None:
@@ -356,52 +357,7 @@ class Knit_Script_Context(Knit_Script_Debuggable_Protocol):
                 e.add_note(f"Couldn't produce valid error.k file because of error: {cut_e}")
             raise
 
-    def get_needle(self, is_front: bool, pos: int, is_slider: bool = False, global_needle: bool = False, sheet: int | None = None, gauge: int | None = None) -> Needle:
-        """Get a needle based on current gauging configuration.
-
-        Args:
-            is_front (bool): Whether this is a front needle.
-            pos (int): Position within the current layer.
-            is_slider (bool, optional): Whether this is a slider needle. Defaults to False.
-            global_needle (bool, optional): If true, ignore the gauging scheme. Defaults to False.
-            sheet (int | None, optional): Specify the sheet to get needles from, defaults to the current sheet. Defaults to None.
-            gauge (int | None, optional): Specify gauging to get needles from, defaults to current gauge. Defaults to None.
-
-        Returns:
-            Needle: Needle based on current gauging configuration.
-        """
-        if sheet is None:
-            sheet = self.sheet.sheet
-        if gauge is None:
-            gauge = self.gauge
-        if global_needle or gauge == 1:
-            if is_slider:
-                return Slider_Needle(is_front, pos)
-            else:
-                return Needle(is_front, pos)
-        else:
-            if is_slider:
-                return Slider_Sheet_Needle(is_front, pos, sheet, gauge)
-            else:
-                return Sheet_Needle(is_front, pos, sheet, gauge)
-
-    def get_machine_needle(self, is_front: bool, pos: int, is_slider: bool = False, global_needle: bool = False, sheet: int | None = None, gauge: int | None = None) -> Needle:
-        """Get the exact needle instance in use on the machine state.
-
-        Args:
-            is_front (bool): Whether this is a front needle.
-            pos (int): Position in current layer.
-            is_slider (bool, optional): Whether this is a slider needle. Defaults to False.
-            global_needle (bool, optional): If true, ignore the gauging scheme. Defaults to False.
-            sheet (int | None, optional): Specify the sheet to get needles from, defaults to the current sheet. Defaults to None.
-            gauge (int | None, optional): Specify gauging to get needles from, defaults to current gauge. Defaults to None.
-
-        Returns:
-            Needle: The exact needle instance in use on the machine state.
-        """
-        return self.machine_state[self.get_needle(is_front, pos, is_slider, global_needle, sheet, gauge)]
-
-    def report_locals(self) -> tuple[Knitting_Machine, Yarn_Carrier_Set | None, Sheet_Identifier, int]:
+    def report_locals(self) -> tuple[Knitout_Knitting_Machine, Yarn_Carrier_Set | None, Sheet_Identifier, int]:
         """
         Returns:
             tuple[Knitting_Machine, Yarn_Carrier_Set | None, Sheet_Identifier, int]:
@@ -412,3 +368,17 @@ class Knit_Script_Context(Knit_Script_Debuggable_Protocol):
                 * The gauge that the machine is set to.
         """
         return self.machine_state, self.carrier, self.sheet, self.gauge
+
+    def execute_and_add_knitout_lines(self, *knitout_lines: Knitout_Line) -> None:
+        """
+        Executes the given knitout line on the machine state and adds it or a commented no-op to the knitout created during this context's execution.
+        Args:
+            knitout_lines (Iterable[Knitout_Line]): The Knitout_Line to execute and add to the program.
+        """
+        for knitout_line in knitout_lines:
+            knitout_line.set_line(len(self.knitout), self.ks_file)
+            updates_machine_state = knitout_line.execute(self.machine_state) if not isinstance(knitout_line, Pause_Instruction) else True
+            if not updates_machine_state:
+                knitout_line = Knitout_No_Op(knitout_line)
+                knitout_line.set_line(len(self.knitout), self.ks_file)
+            self.knitout.append(knitout_line)

@@ -20,11 +20,13 @@ Create a file called ``stockinette.ks``:
 
    with Carrier as c1:{
      in Leftward direction:{
-       tuck Front_Needles[0:width:2];
-     }
-     in reverse direction:{
        tuck Front_Needles[1:width:2];
      }
+     in reverse direction:{
+       tuck Front_Needles[0:width:2];
+     }
+
+     releasehook;
      for _ in range(10):{
        in reverse direction:{
          knit Loops;
@@ -37,7 +39,7 @@ Now convert it to knitout:
 
 .. code-block:: python
 
-   from knit_script import knit_script_to_knitout
+   from knit_script.interpret_knit_script import knit_script_to_knitout
 
    # Convert pattern to knitout
    knit_graph, machine = knit_script_to_knitout(

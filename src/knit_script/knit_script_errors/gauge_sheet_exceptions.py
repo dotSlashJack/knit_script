@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
-from knit_script.knit_script_exceptions.Knit_Script_Exception import Knit_Script_Exception
+from knit_script.knit_script_errors.Knit_Script_Error import Knit_Script_Error
 
 
-class Gauge_Value_Exception(Knit_Script_Exception):
+class Gauge_Value_Error(Knit_Script_Error):
     """Exception raised when gauge is set beyond the machine's capabilities.
 
     This exception occurs when attempting to set a gauge value that is outside the acceptable range for the knitting machine,
@@ -28,7 +28,7 @@ class Gauge_Value_Exception(Knit_Script_Exception):
         super().__init__(f"Gauge must be between 0 and and the MAX_GAUGE but got {gauge}")
 
 
-class Sheet_Value_Exception(Knit_Script_Exception):
+class Sheet_Value_Error(Knit_Script_Error):
     """Exception raised when sheet is set to an unacceptable value.
 
     This exception occurs when attempting to set an active sheet number that is outside the valid range for the current gauge configuration.
@@ -45,7 +45,7 @@ class Sheet_Value_Exception(Knit_Script_Exception):
         super().__init__(f"Sheet must be between 0 and gauge {current_gauge} but got {sheet}")
 
 
-class Sheet_Peeling_Stacked_Loops_Exception(Knit_Script_Exception):
+class Sheet_Peeling_Stacked_Loops_Error(Knit_Script_Error):
     """Exception raised when trying to peel loops that cannot be returned to a separated state.
 
     This exception occurs during sheet peeling operations when loops that were recorded on both front and back needles cannot be properly separated
@@ -62,7 +62,7 @@ class Sheet_Peeling_Stacked_Loops_Exception(Knit_Script_Exception):
         super().__init__(f"Loops recorded on {front_needle} and {back_needle}, but peeled loops cannot be returned to a seperated state")
 
 
-class Sheet_Peeling_Blocked_Loops_Exception(Knit_Script_Exception):
+class Sheet_Peeling_Blocked_Loops_Error(Knit_Script_Error):
     """Exception raised when loops cannot be returned due to blocking loops on the target needle.
 
     This exception occurs during sheet reset operations when loops need to be transferred back to their recorded positions but are blocked by existing loops on the target needle.
@@ -79,7 +79,7 @@ class Sheet_Peeling_Blocked_Loops_Exception(Knit_Script_Exception):
         super().__init__(f"Cannot return loops from {return_from_needle} because loops are held on {return_to_needle}")
 
 
-class Lost_Sheet_Loops_Exception(Knit_Script_Exception):
+class Lost_Sheet_Loops_Error(Knit_Script_Error):
     """Exception raised when loops are lost and the sheet cannot be reset.
 
     This exception occurs when loops that were recorded on a needle during sheet operations are no longer present when attempting to reset the sheet,

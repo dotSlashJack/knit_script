@@ -15,6 +15,7 @@ from inspect import stack
 from typing import TYPE_CHECKING, Any
 
 from knit_graphs.Knit_Graph import Knit_Graph
+from knitout_interpreter.knitout_execution_structures.Knitout_Knitting_Machine import Knitout_Machine_Specification
 from knitout_interpreter.knitout_operations.Knitout_Line import Knitout_Line
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 
@@ -45,6 +46,7 @@ class Knit_Script_Interpreter:
         warning_logger: KnitScript_Warning_Log | None = None,
         error_logger: KnitScript_Error_Log | None = None,
         debugger: Knit_Script_Debugger_Protocol | None = None,
+        knitout_machine_spec: Knitout_Machine_Specification | None = None,
     ) -> None:
         """Initialize the knit script interpreter.
 
@@ -60,9 +62,10 @@ class Knit_Script_Interpreter:
                 Defaults to using any debugger already attached to a given context or not attaching any debugger if the context is also new.
         """
         self._parser: Knit_Script_Parser = Knit_Script_Parser()
+        self._machine_spec: Knitout_Machine_Specification | None = knitout_machine_spec
         if context is None:
             self._knitscript_context: Knit_Script_Context = Knit_Script_Context(
-                parser=self._parser, debugger=debugger, info_logger=info_logger, warning_logger=warning_logger, error_logger=error_logger
+                machine_specification=knitout_machine_spec, parser=self._parser, debugger=debugger, info_logger=info_logger, warning_logger=warning_logger, error_logger=error_logger
             )
         else:
             self._knitscript_context = context
@@ -103,7 +106,7 @@ class Knit_Script_Interpreter:
         Note:
             This operation cannot be undone. All context state will be lost.
         """
-        self._knitscript_context = Knit_Script_Context(parser=self._parser, debugger=self.debugger)
+        self._knitscript_context = Knit_Script_Context(parser=self._parser, debugger=self.debugger, machine_specification=self._machine_spec)
         if self.debugger is not None:
             self.debugger.reset_debugger()
 
@@ -174,7 +177,7 @@ class Knit_Script_Interpreter:
 
         self._add_variables(python_variables)
         knitout, return_val = self._interpret_knit_script(pattern, pattern_is_file)
-        self._knitscript_context.knitout.extend(cut_active_carriers(self._knitscript_context.machine_state))
+        knitout.extend(cut_active_carriers(self._knitscript_context.machine_state))
 
         with open(out_file_name, "w", encoding="utf-8", newline="\n") as out:
             out.writelines([str(k) for k in knitout])

@@ -59,4 +59,4 @@ class Needle_Expression(Expression):
         if slider:
             num_str = num_str[1:]  # cut slider off
         pos = int(num_str)
-        return context.get_needle(is_front, pos, slider)
+        return context.machine_state.get_specified_needle(is_front, pos, slider)

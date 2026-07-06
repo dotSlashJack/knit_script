@@ -12,11 +12,12 @@ import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, cast
 
+from knitout_interpreter.knitout_execution_structures.Knitout_Knitting_Machine import Knitout_Knitting_Machine
 from knitout_interpreter.knitout_operations.carrier_instructions import Inhook_Instruction, Releasehook_Instruction
 from knitout_interpreter.knitout_operations.Knitout_Line import Knitout_Comment_Line
 from knitout_interpreter.knitout_operations.Rack_Instruction import Rack_Instruction
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
-from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Yarn_Carrier_Exception
+from virtual_knitting_machine.knitting_machine_exceptions.Yarn_Carrier_Error_State import Yarn_Carrier_Error
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
 from virtual_knitting_machine.machine_components.needles.Sheet_Identifier import Sheet_Identifier
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
@@ -65,7 +66,7 @@ class Machine_Scope:
             self.inherit_from_scope(prior_settings, inherit_raw_values=True)
 
     @property
-    def machine_state(self) -> Knitting_Machine:
+    def machine_state(self) -> Knitout_Knitting_Machine:
         """Get the current machine state in the current context.
 
         Returns:
@@ -133,13 +134,13 @@ class Machine_Scope:
             if self.Carrier is not None:  # Check for missing carrier to inhook prior to operations.
                 missing_carriers = self.machine_state.carrier_system.missing_carriers(cast(list[int | Yarn_Carrier], self.Carrier.carrier_ids))
                 if len(missing_carriers) > 1:
-                    raise Yarn_Carrier_Exception(missing_carriers[1], f"Cannot Inhook multiple carriers at once without unstable yarns. \n\tActivate missing carriers <{missing_carriers}>")
+                    raise Yarn_Carrier_Error(missing_carriers[1], f"Cannot Inhook multiple carriers at once without unstable yarns. \n\tActivate missing carriers <{missing_carriers}>")
                 elif len(missing_carriers) == 1:
                     if self.machine_state.carrier_system.hooked_carrier is not None:
-                        release_op = Releasehook_Instruction.execute_releasehook(self.machine_state, self.machine_state.carrier_system.hooked_carrier)
-                        self._context.knitout.append(release_op)
-                    inhook_op = Inhook_Instruction.execute_inhook(self.machine_state, missing_carriers[0])
-                    self._context.knitout.append(inhook_op)
+                        release_op = Releasehook_Instruction(self.machine_state.carrier_system.hooked_carrier)
+                        self._context.execute_and_add_knitout_lines(release_op)
+                    inhook_op = Inhook_Instruction(missing_carriers[0])
+                    self._context.execute_and_add_knitout_lines(inhook_op)
 
     @property
     def last_working_carrier(self) -> Yarn_Carrier_Set | None:
@@ -176,8 +177,8 @@ class Machine_Scope:
         if rack != self.Racking:
             self._working_racking = rack
             gauge_adjusted_racking = self.Gauge * self.Racking
-            rack_instruction = Rack_Instruction.execute_rack(self.machine_state, gauge_adjusted_racking, comment=None if self.Gauge == 1 else f"{rack} Rack adjusted for 1/{self.Gauge} gauge")
-            self._context.knitout.append(rack_instruction)
+            rack_instruction = Rack_Instruction(gauge_adjusted_racking, comment=None if self.Gauge == 1 else f"{rack} Rack adjusted for 1/{self.Gauge} gauge")
+            self._context.execute_and_add_knitout_lines(rack_instruction)
 
     @property
     def Rack(self) -> float:
@@ -281,8 +282,8 @@ class Machine_Scope:
             self.Gauge = gauge
         if self.Sheet != Sheet_Identifier(sheet, self.Gauge):
             self._sheet = Sheet_Identifier(sheet, self.Gauge)
-            self._context.knitout.append(Knitout_Comment_Line(f"Resetting to sheet {self.Sheet} of {self.Gauge}"))
-            self._context.knitout.extend(self.gauged_sheet_record.reset_to_sheet(self.Sheet.sheet))
+            self._context.execute_and_add_knitout_lines(Knitout_Comment_Line(f"Resetting to sheet {self.Sheet} of {self.Gauge}"))
+            self._context.execute_and_add_knitout_lines(*self.gauged_sheet_record.reset_to_sheet(self.Sheet.sheet))
 
     def inherit_from_scope(self, scope: Machine_Scope, inherit_raw_values: bool = False) -> None:
         """Set the machine scope values based on the given scope.

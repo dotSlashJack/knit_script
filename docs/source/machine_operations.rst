@@ -249,6 +249,7 @@ Sheet-Scoped Operations
 				tuck Front_Needles[0:width:2]; // note that front_needles is localized to the working sheet
 				tuck Back_Needles[1:width:2]; // note that back_needles is localized to the working sheet
 			   }
+			   releasehook;
 		   }
 
 		   // Work on sheet 1

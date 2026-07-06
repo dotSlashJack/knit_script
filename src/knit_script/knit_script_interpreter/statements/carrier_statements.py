@@ -54,8 +54,8 @@ class Cut_Statement(Statement):
             warnings.warn(Cut_Unspecified_Carrier_Warning(context.carrier), stacklevel=1)
             if isinstance(context.carrier, Yarn_Carrier_Set):
                 for carrier in context.carrier:
-                    outhook_op = Outhook_Instruction.execute_outhook(context.machine_state, carrier, f"Cutting working carrier {carrier} of {context.carrier}")
-                    context.knitout.append(outhook_op)
+                    out_op = Outhook_Instruction(carrier, f"Removing working carrier {carrier} of {context.carrier}")
+                    context.execute_and_add_knitout_lines(out_op)
         else:
             carrier_set: set[int | Yarn_Carrier] = set()
 
@@ -85,8 +85,8 @@ class Cut_Statement(Statement):
                 _add_carrier(carrier)
             yarn_carrier_set: Yarn_Carrier_Set = Yarn_Carrier_Set(list(carrier_set))
             for c in yarn_carrier_set:
-                outhook_op = Outhook_Instruction.execute_outhook(context.machine_state, c)
-                context.knitout.append(outhook_op)
+                out_op = Outhook_Instruction(c)
+                context.execute_and_add_knitout_lines(out_op)
 
 
 class Release_Statement(Statement):
@@ -116,8 +116,8 @@ class Release_Statement(Statement):
         """
         carrier = context.machine_state.carrier_system.hooked_carrier
         if carrier is not None:
-            release_op = Releasehook_Instruction.execute_releasehook(context.machine_state, carrier)
-            context.knitout.append(release_op)
+            release_op = Releasehook_Instruction(carrier)
+            context.execute_and_add_knitout_lines(release_op)
 
 
 class Remove_Statement(Statement):
@@ -155,8 +155,8 @@ class Remove_Statement(Statement):
             warnings.warn(Cut_Unspecified_Carrier_Warning(context.carrier), stacklevel=1)
             if isinstance(context.carrier, Yarn_Carrier_Set):
                 for carrier in context.carrier:
-                    out_op = Out_Instruction.execute_out(context.machine_state, carrier, f"Removing working carrier {carrier} of {context.carrier}")
-                    context.knitout.append(out_op)
+                    out_op = Out_Instruction(carrier, f"Removing working carrier {carrier} of {context.carrier}")
+                    context.execute_and_add_knitout_lines(out_op)
         else:
             set_of_carriers: set[int] = set()
 
@@ -178,5 +178,5 @@ class Remove_Statement(Statement):
                 carrier = c.evaluate(context)
                 _add_carrier(carrier)
             for c in set_of_carriers:
-                out_op = Out_Instruction.execute_out(context.machine_state, c)
-                context.knitout.append(out_op)
+                out_op = Out_Instruction(c)
+                context.execute_and_add_knitout_lines(out_op)

@@ -46,4 +46,4 @@ class Print(Statement):
         print_str = str(self._string.evaluate(context))
         context.print(print_str)
         ks_string = print_str.replace("\n", "\n;")
-        context.knitout.append(Knitout_Comment_Line(ks_string))
+        context.execute_and_add_knitout_lines(Knitout_Comment_Line(ks_string))

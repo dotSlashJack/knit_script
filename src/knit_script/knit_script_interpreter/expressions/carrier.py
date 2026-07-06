@@ -48,5 +48,5 @@ class Carrier_Expression(Expression):
             ValueError: If the carrier string format is invalid or cannot be parsed.
             KeyError: If the extracted carrier ID does not exist in the machine's carrier system.
         """
-        carrier = Yarn_Carrier(int(self._carrier_str[1:]))
+        carrier = Yarn_Carrier(int(self._carrier_str[1:]), context.machine_state)
         return context.machine_state[carrier]

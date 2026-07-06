@@ -16,7 +16,7 @@ class TestFunctions(TestCase):
         with Carrier as c1:{ assert f() is None;}
         """
         klines, _, __ = interpret_test_ks(program)
-        assert count_lines(klines, include_types={Tuck_Instruction}) == 4
+        self.assertEqual(count_lines(klines, include_types={Tuck_Instruction}), 4)
 
     def test_parameter_function(self):
         program = r"""
@@ -29,7 +29,7 @@ class TestFunctions(TestCase):
                 with Carrier as c1:{ f(4);}
                 """
         klines, _, __ = interpret_test_ks(program)
-        assert count_lines(klines, include_types={Tuck_Instruction}) == 4
+        self.assertEqual(count_lines(klines, include_types={Tuck_Instruction}), 4)
 
     def test_default_parameter_function(self):
         program = r"""
@@ -45,7 +45,7 @@ class TestFunctions(TestCase):
                 }
                 """
         klines, _, __ = interpret_test_ks(program)
-        assert count_lines(klines, include_types={Tuck_Instruction}) == 10
+        self.assertEqual(count_lines(klines, include_types={Tuck_Instruction}), 10)
 
     def test_multiple_parameter_function(self):
         program = r"""
@@ -63,7 +63,7 @@ class TestFunctions(TestCase):
                 with Carrier as c1:{ f(2,2);}
                 """
         klines, _, __ = interpret_test_ks(program)
-        assert count_lines(klines, include_types={Tuck_Instruction}) == 4
+        self.assertEqual(count_lines(klines, include_types={Tuck_Instruction}), 4)
 
     def test_function_parameter_scope(self):
         program = r"""
@@ -87,10 +87,8 @@ class TestFunctions(TestCase):
         }
         print f"{p} should raise Name error";
         """
-        try:
+        with self.assertRaises(NameError):
             interpret_test_ks(program)
-        except NameError as _e:
-            pass
 
     def test_function_parameter_scope_clears(self):
         program = r"""
@@ -101,10 +99,8 @@ class TestFunctions(TestCase):
         f();
         print f"{p} should raise Name error";
         """
-        try:
+        with self.assertRaises(NameError):
             interpret_test_ks(program)
-        except NameError as _e:
-            pass
 
     def test_function_returns(self):
         program = r"""
@@ -118,4 +114,4 @@ class TestFunctions(TestCase):
         with Carrier as c1:{ assert f()== f5;}
         """
         klines, _, __ = interpret_test_ks(program)
-        assert count_lines(klines, include_types={Tuck_Instruction}) == 4
+        self.assertEqual(count_lines(klines, include_types={Tuck_Instruction}), 4)

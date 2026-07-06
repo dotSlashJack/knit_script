@@ -160,46 +160,44 @@ unpack: "*" exp=expression;
 
 gauge_exp: sheet_exp=expression "of" gauge=expression "sheets";
 
-
-
-expression: expression "^" expression {right, 6}
-            | expression "*" expression {left, 5}
-            | expression "/" expression {left, 4}
-            | expression "%" expression {left, 3}
-            | expression "+" expression {left, 2}
-            | expression "-" expression   {left, 1}
-            | expression "<" expression   {left, 1}
-            | expression "<=" expression  {left, 1}
-            | expression ">" expression   {left, 1}
-            | expression ">=" expression  {left, 1}
-            | expression "==" expression  {left, 1}
-            | expression "!=" expression  {left, 1}
-            | expression "is" "not"? expression  {left, 1}
-            | expression "in" expression  {left, 1}
-            | expression "not" "in" expression {left, 1}
-            | expression "and" expression {left, 1}
-            | expression "or" expression  {left, 1}
-            | negation {1}
-            | gauge_exp {1}
-            | "(" expression ")" {7}
-            | indexed_value {14}
-            | unpack {13}
-            | float_exp {13}
-            | int_exp {13}
-            | formatted_string {13}
-            | string {13}
-            | direction_exp {13}
-            | list_expression {13}
-            | list_comp {13}
-            | dict_expression {13}
-            | dict_comp {13}
-            | needle_instruction {13}
-            | needle_id {12}
-            | carrier {12}
-            | sheet_id {12}
-            | function_call {11}
-            | accessor {10}
-            | identifier {8};
+expression: expression "or" expression   {left, 1}
+          | expression "and" expression  {left, 2}
+          | expression "is" "not"? expression {left, 3}
+          | expression "in" expression   {left, 3}
+          | expression "not" "in" expression {left, 3}
+          | expression "<" expression    {left, 3}
+          | expression "<=" expression   {left, 3}
+          | expression ">" expression    {left, 3}
+          | expression ">=" expression   {left, 3}
+          | expression "==" expression   {left, 3}
+          | expression "!=" expression   {left, 3}
+          | expression "+" expression    {left, 4}
+          | expression "-" expression    {left, 4}
+          | expression "%" expression    {left, 5}
+          | expression "/" expression    {left, 6}
+          | expression "*" expression    {left, 7}
+          | expression "^" expression    {right, 8}
+          | negation {1}
+          | gauge_exp {1}
+          | "(" expression ")" {9}
+          | indexed_value {14}
+          | unpack {13}
+          | float_exp {13}
+          | int_exp {13}
+          | formatted_string {13}
+          | string {13}
+          | direction_exp {13}
+          | list_expression {13}
+          | list_comp {13}
+          | dict_expression {13}
+          | dict_comp {13}
+          | needle_instruction {13}
+          | needle_id {12}
+          | carrier {12}
+          | sheet_id {12}
+          | function_call {11}
+          | accessor {10}
+          | identifier {8};
 
 LAYOUT: LayoutItem | LAYOUT LayoutItem | EMPTY;
 LayoutItem: WS | Comment;

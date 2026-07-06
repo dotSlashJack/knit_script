@@ -69,11 +69,11 @@ class Test_Containers(TestCase):
 
     def test_mixed_dict(self):
         program = r"""return {"f1":1,"cat":2,f3:c3};"""
-        _ko, _machine, _graph, return_val = interpret_test_ks_with_return(program, print_k_lines=False)
+        _ko, _graph, machine, return_val = interpret_test_ks_with_return(program, print_k_lines=False)
         self.assertTrue(isinstance(return_val, dict))
         self.assertEqual(return_val["f1"], 1)
         self.assertTrue(return_val["cat"], 2)
-        self.assertIn(Needle(True, 3), return_val)
+        self.assertIn(machine.get_specified_needle(True, 3), return_val)
 
     def test_conditioned_dict_comp(self):
         program = r"""

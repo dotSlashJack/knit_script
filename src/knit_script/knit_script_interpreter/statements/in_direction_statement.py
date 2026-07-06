@@ -8,9 +8,9 @@ import warnings
 
 from knitout_interpreter.knitout_operations.knitout_instruction import Knitout_Instruction_Type
 from parglare.parser import LRStackNode
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle_Specification
 
-from knit_script.knit_script_exceptions.Knit_Script_Exception import No_Declared_Carrier_Exception
+from knit_script.knit_script_errors.Knit_Script_Error import No_Declared_Carrier_Error
 from knit_script.knit_script_interpreter.expressions.expressions import Expression
 from knit_script.knit_script_interpreter.expressions.instruction_expression import Needle_Instruction_Exp
 from knit_script.knit_script_interpreter.knit_script_context import Knit_Script_Context
@@ -62,9 +62,9 @@ class In_Direction_Statement(Statement):
                 context.carrier = context.variable_scope.machine_scope.last_working_carrier
                 warnings.warn(Unspecified_Carrier_Warning(context.carrier), stacklevel=1)
             else:  # No carrier to work with
-                raise No_Declared_Carrier_Exception()
+                raise No_Declared_Carrier_Error()
         direction = self._direction.evaluate(context)
-        needles_to_instruction: dict[Needle, Knitout_Instruction_Type] = {}
+        needles_to_instruction: dict[Needle_Specification, Knitout_Instruction_Type] = {}
 
         has_splits = False
         for instruction_exp in self._instructions:

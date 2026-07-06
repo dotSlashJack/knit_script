@@ -13,7 +13,7 @@ import parglare
 from parglare import Grammar, Parser
 
 import knit_script.knit_script_interpreter as ks_interpreter
-from knit_script.knit_script_exceptions.parsing_exception import Parsing_Exception
+from knit_script.knit_script_errors.parsing_exception import Parsing_Error
 from knit_script.knit_script_interpreter.knit_script_actions import action
 from knit_script.knit_script_interpreter.statements.Statement import Statement
 
@@ -67,4 +67,4 @@ class Knit_Script_Parser:
                 parse_results = self._parser.parse(pattern)
                 return cast(list[Statement], parse_results)
         except parglare.exceptions.SyntaxError as e:
-            raise Parsing_Exception(e) from None
+            raise Parsing_Error(e) from None

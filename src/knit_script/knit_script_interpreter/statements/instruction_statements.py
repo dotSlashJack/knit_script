@@ -36,4 +36,4 @@ class Pause_Statement(Statement):
         Args:
             context (Knit_Script_Context): The current execution context of the knit script interpreter.
         """
-        context.knitout.append(Pause_Instruction())
+        context.execute_and_add_knitout_lines(Pause_Instruction())

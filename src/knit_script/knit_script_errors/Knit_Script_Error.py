@@ -7,7 +7,7 @@ from knitout_interpreter.knitout_operations.knitout_instruction import Knitout_I
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 
 
-class Knit_Script_Exception(Exception):
+class Knit_Script_Error(Exception):
     """Superclass for all exceptions related to processing KnitScript programs.
 
     The Knit_Script_Exception class provides the foundation for all error handling in the KnitScript programming language.
@@ -27,7 +27,7 @@ class Knit_Script_Exception(Exception):
         super().__init__(str(message) if isinstance(message, BaseException) else f"\n{self.__class__.__name__}: {message}")
 
 
-class Incompatible_In_Carriage_Pass_Exception(Knit_Script_Exception):
+class Incompatible_In_Carriage_Pass_Error(Knit_Script_Error):
     """Exception raised when instructions are combined in a carriage pass that are incompatible.
 
     This exception occurs when two or more instruction types are used together in a single carriage pass but cannot be executed simultaneously due to machine limitations or logical conflicts.
@@ -49,7 +49,7 @@ class Incompatible_In_Carriage_Pass_Exception(Knit_Script_Exception):
         super().__init__(f"Cannot {self.first_instruction} and {self.second_instruction} in same carriage pass")
 
 
-class Required_Direction_Exception(Knit_Script_Exception):
+class Required_Direction_Error(Knit_Script_Error):
     """Exception raised when attempting a carriage pass without specifying a direction for yarn-carrier operations.
 
     This exception occurs when operations that require yarn carriers are attempted without establishing a carriage direction, which is necessary for proper yarn handling and loop formation.
@@ -68,7 +68,7 @@ class Required_Direction_Exception(Knit_Script_Exception):
         super().__init__(f"Cannot {self.instruction_type} without declaring a direction")
 
 
-class All_Needle_Operation_Exception(Knit_Script_Exception):
+class All_Needle_Operation_Error(Knit_Script_Error):
     """Exception raised when an all-needle operation occurs without an all-needle racking.
 
     This exception occurs when operations that require all needles to be properly aligned (such as certain transfer operations)
@@ -97,7 +97,7 @@ class All_Needle_Operation_Exception(Knit_Script_Exception):
         super().__init__(f"Cannot {self.instruction} on {self.first_needle} and {self.second_needle} at All-Needle racking of {self.racking}.")
 
 
-class No_Declared_Carrier_Exception(Knit_Script_Exception):
+class No_Declared_Carrier_Error(Knit_Script_Error):
     """Exception raised when no working carrier has been declared for operations that require one.
 
     This exception occurs when knitting or tucking operations are attempted without first declaring a working yarn carrier, which is necessary for these operations to form proper loops.

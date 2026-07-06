@@ -5,15 +5,16 @@ It ensures proper sequencing, compatibility checking, and execution of operation
 """
 
 import warnings
+from collections.abc import Iterable
 
 from knitout_interpreter.knitout_operations.knitout_instruction import Knitout_Instruction_Type
 from knitout_interpreter.knitout_operations.knitout_instruction_factory import build_instruction
-from knitout_interpreter.knitout_operations.needle_instructions import Needle_Instruction
+from knitout_interpreter.knitout_operations.needle_instructions import Needle_Instruction, Two_Needle_Instruction
 from knitout_interpreter.knitout_operations.Rack_Instruction import Rack_Instruction
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
-from virtual_knitting_machine.machine_components.needles.Needle import Needle
+from virtual_knitting_machine.machine_components.needles.Needle import Needle, Needle_Specification
 
-from knit_script.knit_script_exceptions.Knit_Script_Exception import All_Needle_Operation_Exception, Incompatible_In_Carriage_Pass_Exception, Required_Direction_Exception
+from knit_script.knit_script_errors.Knit_Script_Error import All_Needle_Operation_Error, Incompatible_In_Carriage_Pass_Error, Required_Direction_Error
 from knit_script.knit_script_interpreter.knit_script_context import Knit_Script_Context
 from knit_script.knit_script_interpreter.ks_element import KS_Element
 from knit_script.knit_script_interpreter.Machine_Specification import Machine_Bed_Position
@@ -47,7 +48,7 @@ class Carriage_Pass_Specification:
     def __init__(
         self,
         source_statement: KS_Element,
-        needle_to_instruction: dict[Needle, Knitout_Instruction_Type],
+        needle_to_instruction: dict[Needle_Specification, Knitout_Instruction_Type],
         direction: Carriage_Pass_Direction | None = None,
         target_bed: Machine_Bed_Position | None = None,
         racking: float | None = None,
@@ -81,7 +82,7 @@ class Carriage_Pass_Specification:
 
         if not is_drop_pass:  # extract drop operations
             drop_pass = {}
-            n_to_i: dict[Needle, Knitout_Instruction_Type] = {}
+            n_to_i: dict[Needle_Specification, Knitout_Instruction_Type] = {}
             for needle, instruction_type in needle_to_instruction.items():
                 if instruction_type is Knitout_Instruction_Type.Drop:
                     drop_pass[needle] = Knitout_Instruction_Type.Drop
@@ -92,7 +93,7 @@ class Carriage_Pass_Specification:
                 self._drop_pass = Carriage_Pass_Specification(self._source_statement, drop_pass, Carriage_Pass_Direction.Rightward, is_drop_pass=True)
                 needle_to_instruction = n_to_i
 
-        self._needle_to_instruction: dict[Needle, Knitout_Instruction_Type] = needle_to_instruction
+        self._needle_to_instruction: dict[Needle_Specification, Knitout_Instruction_Type] = needle_to_instruction
         self._direction: Carriage_Pass_Direction | None = direction
         self._instruction_types: set[Knitout_Instruction_Type] = set()
         first_instruction_type = None
@@ -109,9 +110,9 @@ class Carriage_Pass_Specification:
                     self._require_second = True
             else:
                 if not first_instruction_type.compatible_pass(instruction_type):
-                    raise Incompatible_In_Carriage_Pass_Exception(first_instruction_type, instruction_type)
+                    raise Incompatible_In_Carriage_Pass_Error(first_instruction_type, instruction_type)
             if instruction_type.directed_pass and self._direction is None:
-                raise Required_Direction_Exception(instruction_type)
+                raise Required_Direction_Error(instruction_type)
 
     def _needs_released_hook(self, context: Knit_Script_Context) -> bool:
         """Check if the yarn hook needs to be released for this pass.
@@ -157,67 +158,63 @@ class Carriage_Pass_Specification:
         if self._racking is not None:
             context.racking = self._racking
 
-        needles = [*self._needle_to_instruction.keys()]
+        needles = self._keep_target_bed_needles(self._needle_to_instruction.keys())  # ignore needles that are already on target bed
 
-        needles = self._keep_target_bed_needles(needles)  # ignore needles that are already on target bed
-
-        needles_in_order = self._direction.sort_needles(needles, racking=int(context.racking))
-        # sort into the direction of machine pass
+        needles_in_order: list[Needle] = [context.machine_state[n] for n in self._direction.sort_needles(needles, racking=int(context.racking))]  # sort into the direction of machine pass
 
         # calculate all-needle racking condition
         needs_all_needle_rack = False
         for n, m in zip(needles_in_order[0:-1], needles_in_order[1:], strict=False):
-            if n.racked_position_on_front(int(context.racking)) == m.racked_position_on_front(int(context.racking)):
+            if n.slot_number == m.slot_number:
                 if n.is_front == m.is_front:
                     warnings.warn(Repeated_Needle_Warning(n), stacklevel=1)
                     continue
                 n_instruction = self._needle_to_instruction[n]
                 if not n_instruction.all_needle_instruction:
-                    raise All_Needle_Operation_Exception(n, m, context.machine_state.rack, n_instruction)
+                    raise All_Needle_Operation_Error(n, m, context.machine_state.rack, n_instruction)
                 needs_all_needle_rack = True
 
         if needs_all_needle_rack:
-            context.knitout.append(Rack_Instruction.execute_rack(context.machine_state, context.racking + 0.25, comment=f"All Needle racking {context.racking}"))
+            rack_instruction = Rack_Instruction(context.racking + 0.25, comment=f"All Needle racking {context.racking}")
+            context.execute_and_add_knitout_lines(rack_instruction)
 
         for needle in needles_in_order:
             instruction_type = self._needle_to_instruction[needle]
             second_needle = context.machine_state.get_aligned_needle(needle, aligned_slider=self._to_sliders) if instruction_type.requires_second_needle else None
             results[needle] = second_needle
             instruction = build_instruction(instruction_type, first_needle=needle, direction=context.direction, carrier_set=context.carrier, second_needle=second_needle)
-            _ = instruction.execute(context.machine_state)
+            context.execute_and_add_knitout_lines(instruction)
             if isinstance(instruction, Needle_Instruction):
                 context.gauged_sheet_record.record_needle(instruction.needle)
-                if isinstance(instruction.needle_2, Needle) and instruction.needle_2.position != instruction.needle.position:
+                if isinstance(instruction, Two_Needle_Instruction) and isinstance(instruction.needle_2, Needle) and instruction.needle_2.position != instruction.needle.position:
                     context.gauged_sheet_record.record_needle(instruction.needle_2)
-            context.knitout.append(instruction)
         if needs_all_needle_rack:
-            context.knitout.append(Rack_Instruction.execute_rack(context.machine_state, cur_rack, comment="Reset rack from all_needle"))
+            reset_rack_op = Rack_Instruction(cur_rack, comment="Reset rack from all_needle")
+            context.execute_and_add_knitout_lines(reset_rack_op)
         context.racking = cur_rack
         if self._has_drops:  # still has drops available
             assert isinstance(self._drop_pass, Carriage_Pass_Specification)
             results.update(self._drop_pass.write_knitout(context))
         return results
 
-    def _keep_target_bed_needles(self, needles: list[Needle]) -> list[Needle]:
+    def _keep_target_bed_needles(self, needles: Iterable[Needle_Specification]) -> list[Needle_Specification]:
         """Filter needles to only include those not already on the target bed.
 
         When a target bed is specified, filters the needle list to include only needles that need to be processed (i.e., those not already on the target bed).
 
         Args:
-            needles (list[Needle]): List of needles to filter based on target bed requirements.
+            needles (Iterable[Needle_Specification]): List of needles to filter based on target bed requirements.
 
         Returns:
-            list[Needle]: Filtered list of needles that need to be processed for the target bed.
+            list[Needle_Specification]: Filtered list of needles that need to be processed for the target bed.
 
         Raises:
             TypeError: If target_bed is not a valid Machine_Bed_Position.
         """
         if self._target_bed is not None:  # throw out needles that are on target bed already
-            if not isinstance(self._target_bed, Machine_Bed_Position):
-                raise TypeError(f"Expected xfer to Front or Back Bed but got {self._target_bed}")
-            if self._target_bed is Machine_Bed_Position.Front:
+            if self._target_bed.is_front:
                 return [n for n in needles if n.is_back]
             else:
                 return [n for n in needles if n.is_front]
         else:
-            return needles
+            return [*needles]

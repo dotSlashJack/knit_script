@@ -70,7 +70,12 @@ class Test_Needle_Instructions(TestCase):
 
     def test_drop(self):
         program = r"""
+        Carrier = c1;
+        in Leftward direction:{
+            tuck Front_Needles[0:5];
+        }
+        releasehook;
         drop Front_Needles[0:5];
         """
         klines, _, __ = interpret_test_ks(program)
-        assert count_lines(klines, include_types={Drop_Instruction}) == 5
+        self.assertEqual(count_lines(klines, include_types={Drop_Instruction}), 5)

@@ -11,7 +11,6 @@ from parglare.parser import LRStackNode
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.machine_components.needles.Needle import Needle
 from virtual_knitting_machine.machine_components.needles.Sheet_Identifier import Sheet_Identifier
-from virtual_knitting_machine.machine_components.needles.Sheet_Needle import Sheet_Needle
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier_Set import Yarn_Carrier_Set
 
 from knit_script.knit_script_interpreter.expressions.expressions import Expression
@@ -220,13 +219,9 @@ class Attribute_Accessor_Expression(Expression):
             attribute = self.attribute.evaluate(context)
             if isinstance(attribute, Needle):
                 if isinstance(parent, Knitting_Machine):
-                    if isinstance(attribute, Sheet_Needle):  # assume actual position instead of sheet conversion
-                        return parent[Needle(attribute.is_front, attribute.sheet_pos)]
-                    else:
-                        return parent[attribute]
+                    return parent[attribute]
                 elif isinstance(parent, Sheet_Identifier):
-                    sheet_needle = parent.get_needle(attribute)
-                    return context.machine_state[sheet_needle]
+                    return parent.needle(attribute.is_front, attribute.position, attribute.knitting_machine, is_slider=attribute.is_slider)
             elif isinstance(attribute, Yarn_Carrier_Set) and len(attribute) == 1:
                 return context.machine_state.carrier_system[attribute[0]]
             else:

@@ -865,7 +865,7 @@ def expression(parser_node: LRStackNode, nodes: list[str | KS_Element | Expressi
         return cast(Expression, nodes[1])
     elif len(nodes) == 4:
         if nodes[1] == "is":
-            is_op = Operator_Expression(parser_node, cast(Expression, nodes[0]), cast(str, nodes[1]), cast(Expression, nodes[3]))
+            is_op = Operator_Expression(parser_node, cast(Expression, nodes[0]), nodes[1], cast(Expression, nodes[3]))
             if nodes[2] is not None:
                 return Not_Expression(parser_node, is_op)
             else:

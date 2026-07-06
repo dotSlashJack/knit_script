@@ -5,6 +5,7 @@ It includes functions for retrieving specific carriers by ID and managing the li
 These functions are commonly used in knit script standard library operations and provide essential carrier management capabilities for knitting machine control.
 """
 
+from knitout_interpreter.knitout_execution_structures.Knitout_Knitting_Machine import Knitout_Knitting_Machine
 from knitout_interpreter.knitout_operations.carrier_instructions import Outhook_Instruction, Releasehook_Instruction
 from virtual_knitting_machine.Knitting_Machine import Knitting_Machine
 from virtual_knitting_machine.machine_components.yarn_management.Yarn_Carrier import Yarn_Carrier
@@ -30,7 +31,7 @@ def carrier(machine_state: Knitting_Machine, carrier_id: int) -> Yarn_Carrier:
     return machine_state.carrier_system[carrier_id]
 
 
-def cut_active_carriers(machine_state: Knitting_Machine) -> list[Releasehook_Instruction | Outhook_Instruction]:
+def cut_active_carriers(machine_state: Knitout_Knitting_Machine) -> list[Releasehook_Instruction | Outhook_Instruction]:
     """Create and execute outhook instructions to cut all active carriers.
 
     This function generates outhook instructions for all currently active carriers in the machine state,
