@@ -16,6 +16,8 @@ exception_assignment: except_val=expression "as" var_name=identifier;
 
 print_statement: "print" exp=expression eol;
 
+write_extension_statement: 'write_extension' exp=expression eol;
+
 pause_statement: "pause" eol;
 
 code_block: "{" statements=statement+ "}";
@@ -78,6 +80,7 @@ statement: assertion {10}
             | print_statement {10}
             | try_catch {10}
             | pause_statement {10}
+            | write_extension_statement {10}
             | code_block {10}
             | if_statement {10}
             | while_statement {10}

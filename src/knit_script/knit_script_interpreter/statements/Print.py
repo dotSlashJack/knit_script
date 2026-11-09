@@ -47,3 +47,12 @@ class Print(Statement):
         context.print(print_str)
         ks_string = print_str.replace("\n", "\n;")
         context.execute_and_add_knitout_lines(Knitout_Comment_Line(ks_string))
+
+class Write_Extension(Statement):
+    def __init__(self, parser_node, exp: Expression):
+        super().__init__(parser_node)
+        self._string: Expression = exp
+
+    def execute(self, context: Knit_Script_Context):
+        extension = str(self._string.evaluate(context))
+        context.knitout.append(f"{extension}\n")

@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from knitout_interpreter.knitout_execution_structures.knitout_header import Knitting_Machine_Header
 from knitout_interpreter.knitout_execution_structures.Knitout_Knitting_Machine import Knitout_Knitting_Machine, Knitout_Machine_Specification
+from knitout_interpreter.knitout_operations.Header_Line import Knitout_Version_Line
 from knitout_interpreter.knitout_operations.Knitout_Line import Knitout_Line, Knitout_No_Op
 from knitout_interpreter.knitout_operations.Pause_Instruction import Pause_Instruction
 from virtual_knitting_machine.machine_components.carriage_system.Carriage_Pass_Direction import Carriage_Pass_Direction
@@ -88,7 +89,10 @@ class Knit_Script_Context(Knit_Script_Debuggable_Protocol):
         self._version = knitout_version
         self._header: Knitting_Machine_Header = Knitting_Machine_Header(self.machine_state, self.version)
         self.knitout: list[Knitout_Line] = []
-        self.execute_and_add_knitout_lines(*self._header.header_lines)
+        # The version line must be the first line of the knitout file (the knitout magic string),
+        # but Knitting_Machine_Header lists it after the machine specification lines.
+        header_lines = sorted(self._header.header_lines, key=lambda hl: not isinstance(hl, Knitout_Version_Line))
+        self.execute_and_add_knitout_lines(*header_lines)
         self.variable_scope: Knit_Script_Scope = Knit_Script_Scope(self, parent_scope)
         self.debugger: Knit_Script_Debugger_Protocol | None = None
         if debugger is not None:

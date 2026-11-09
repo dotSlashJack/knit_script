@@ -41,6 +41,9 @@ class KS_Element(Debuggable_Element):
             parser_node (LRStackNode): The parser node that created this element, containing location and context information.
         """
         self.parser_node: LRStackNode = parser_node
+        # The location must be captured at construction time: parser_node.file_name and input_str delegate to the
+        # shared parser, whose state is overwritten whenever another file is parsed (e.g. by an import statement).
+        self._location: Location = Location(parser_node, parser_node.file_name)
 
     @property
     def location(self) -> Location:
@@ -49,7 +52,7 @@ class KS_Element(Debuggable_Element):
         Returns:
             Location: The location of this symbol in the source file, including file name, line number, and position information.
         """
-        return Location(self.parser_node, self.parser_node.file_name)
+        return self._location
 
     @property
     def line_number(self) -> int:
@@ -84,7 +87,7 @@ class KS_Element(Debuggable_Element):
         """
         file_str = ""
         if self.file_name is not None:
-            file_str = f"in {self.file_name}"
+            file_str = f" in {self.file_name}"
         return f"on line {self.line_number}{file_str}"
 
     @property
@@ -153,7 +156,7 @@ def associate_error(execution_method: Callable[_P, _R]) -> Callable[_P, _R]:
         except Exception as e:
             if not hasattr(e, "__notes__") or ks_error_note not in e.__notes__:
                 e.add_note(ks_error_note)
-                e.add_note(f"\t{e.__class__.__name__} at <{self.position_context}> in {self.location_str}")
+                e.add_note(f"\t{e.__class__.__name__} at <{self.position_context}> {self.location_str}")
                 context.print(e, self, KnitScript_Logging_Level.error)
             raise
 

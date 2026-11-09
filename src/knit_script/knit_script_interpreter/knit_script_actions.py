@@ -60,6 +60,7 @@ from knit_script.knit_script_interpreter.statements.Import_Statement import Impo
 from knit_script.knit_script_interpreter.statements.in_direction_statement import In_Direction_Statement
 from knit_script.knit_script_interpreter.statements.instruction_statements import Pause_Statement
 from knit_script.knit_script_interpreter.statements.Print import Print
+from knit_script.knit_script_interpreter.statements.Print import Write_Extension
 from knit_script.knit_script_interpreter.statements.Push_Statement import Push_Statement
 from knit_script.knit_script_interpreter.statements.return_statement import Return_Statement
 from knit_script.knit_script_interpreter.statements.Statement import Statement
@@ -209,6 +210,10 @@ def print_statement(parser_node: LRStackNode, __: list, exp: Expression) -> Prin
         Print: Print Statement that outputs the expression value.
     """
     return Print(parser_node, exp)
+
+@action
+def write_extension_statement(parser_node, __, exp: Expression):
+    return Write_Extension(parser_node, exp)
 
 
 @typed_action
